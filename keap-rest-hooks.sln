@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29418.71
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keap-rest-hooks", "keap-rest-hooks\keap-rest-hooks.csproj", "{168BCC1F-F44E-46D8-9F15-021D39E207DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keap-rest-hooks.Tests", "keap-rest-hooks.Tests\keap-rest-hooks.Tests.csproj", "{FEEA3796-3496-4044-85CF-3FEFB087B89A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{168BCC1F-F44E-46D8-9F15-021D39E207DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{168BCC1F-F44E-46D8-9F15-021D39E207DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{168BCC1F-F44E-46D8-9F15-021D39E207DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{168BCC1F-F44E-46D8-9F15-021D39E207DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FEEA3796-3496-4044-85CF-3FEFB087B89A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEEA3796-3496-4044-85CF-3FEFB087B89A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEEA3796-3496-4044-85CF-3FEFB087B89A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEEA3796-3496-4044-85CF-3FEFB087B89A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DF8532AA-A3D1-4767-B27F-A57ECD8D16E1}
+	EndGlobalSection
+EndGlobal
