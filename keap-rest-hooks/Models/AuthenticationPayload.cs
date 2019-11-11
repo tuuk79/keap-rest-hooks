@@ -12,6 +12,6 @@ namespace keap_rest_hooks.Models
         public string code { get; set; }
         public string grant_type { get; set; }
         public string redirect_uri { get; set; }
-
+        public string state { get; set; }
     }
 }
