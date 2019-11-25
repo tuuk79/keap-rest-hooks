@@ -73,3 +73,14 @@ C:\Projects\keap-rest-hooks\keap-rest-hooks\obj\Debug\keap-rest-hooks.csprojAsse
 C:\Projects\keap-rest-hooks\keap-rest-hooks\obj\Debug\keap-rest-hooks.csproj.CopyComplete
 C:\Projects\keap-rest-hooks\keap-rest-hooks\obj\Debug\keap-rest-hooks.dll
 C:\Projects\keap-rest-hooks\keap-rest-hooks\obj\Debug\keap-rest-hooks.pdb
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\System.Net.Http.Formatting.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\System.Web.Cors.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\System.Web.Http.Cors.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\System.Web.Http.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\System.Net.Http.Formatting.xml
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\System.Web.Http.xml
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\System.Web.Http.Cors.xml
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\EntityFramework.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\EntityFramework.SqlServer.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\EntityFramework.xml
+C:\Projects\keap-rest-hooks\keap-rest-hooks\bin\EntityFramework.SqlServer.xml
