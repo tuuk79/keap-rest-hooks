@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -72,7 +71,7 @@ namespace keap_rest_hooks.Controllers
                 return await Task.Run(() => Redirect(referringAction));
             }
 
-            return await Task.Run(() => Redirect("index"));
+            return await Task.Run(() => RedirectToAction("Index"));
         }
 
         public async Task<ActionResult> CreateHook(string eventKey)
@@ -118,7 +117,7 @@ namespace keap_rest_hooks.Controllers
             else
             {
                 var referringActionManager = new ReferringActionManager();
-                referringActionManager.saveReferringAction("createhook");
+                referringActionManager.saveReferringAction("CreateHook");
 
                 var eventKeyManager = new EventKeyManager();
                 eventKeyManager.saveEventKey(eventKey);
@@ -147,8 +146,8 @@ namespace keap_rest_hooks.Controllers
             var hookSecret = hookSecretManager.getHookSecret();
 
             var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("accept", "application/json");
-            client.DefaultRequestHeaders.Add("x-hook-secret", hookSecret);
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("X-Hook-Secret", hookSecret);
 
             var content = new FormUrlEncodedContent(payload);
             var response = await client.PostAsync(verifyHookDelayedUrl, httpContent);
@@ -159,7 +158,7 @@ namespace keap_rest_hooks.Controllers
                 var createHookResponse = JsonConvert.DeserializeObject<CreateHookResponse>(json);
             }
 
-            return await Task.Run(() => View("index"));
+            return await Task.Run(() => View("Index"));
         }
 
         [System.Web.Mvc.HttpPost]
@@ -178,14 +177,13 @@ namespace keap_rest_hooks.Controllers
                 if (accessToken == null)
                 {
                     var referringActionManager = new ReferringActionManager();
-                    referringActionManager.saveReferringAction("verifyhook");
+                    referringActionManager.saveReferringAction("VerifyHook");
 
                     return await Task.Run(() => RedirectToAction("Authorize"));
                 }
 
                 Order order = null;
 
-                // handle order.edit
                 if (eventSubscriptionPayload.event_key == "order.edit")
                 {
                     var orderId = eventSubscriptionPayload.object_keys[0].id;
@@ -203,6 +201,14 @@ namespace keap_rest_hooks.Controllers
                         order = JsonConvert.DeserializeObject<Order>(results);
                     }
                 }
+                else if (eventSubscriptionPayload.event_key == "order.delete")
+                {
+
+                }
+                else if (eventSubscriptionPayload.event_key == "invoice.payment.add")
+                {
+
+                }
 
                 string path = @"c:\log";
 
@@ -217,6 +223,7 @@ namespace keap_rest_hooks.Controllers
                 {
                     using (StreamWriter sw = System.IO.File.AppendText(path))
                     {
+                        sw.WriteLine(eventSubscriptionPayload.event_key);
                         sw.WriteLine(order.contact.email);
                         sw.WriteLine();
                     }
@@ -225,14 +232,13 @@ namespace keap_rest_hooks.Controllers
                 {
                     using (StreamWriter sw = System.IO.File.CreateText(path))
                     {
-                        sw.WriteLine("Hello");
-                        sw.WriteLine("And");
-                        sw.WriteLine("Welcome");
+                        sw.WriteLine(eventSubscriptionPayload.event_key);
+                        sw.WriteLine(order.contact.email);
                         sw.WriteLine();
                     }
                 }
 
-                return await Task.Run(() => View("index"));
+                return await Task.Run(() => View("Index"));
             }
             else
             {

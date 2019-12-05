@@ -144,10 +144,13 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
-    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\KeapController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Managers\UrlManager.cs" />
+    <Compile Include="Managers\EventKeyManager.cs" />
+    <Compile Include="Managers\ReferringActionManager.cs" />
     <Compile Include="Managers\HookSecretManager.cs" />
     <Compile Include="Managers\AccessTokenManager.cs" />
     <Compile Include="Models\AccessToken.cs">
@@ -236,12 +239,12 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\Home\About.cshtml" />
-    <Content Include="Views\Home\Contact.cshtml" />
-    <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Views\Home\Events.cshtml" />
-    <Content Include="Views\Home\CreateHook.cshtml" />
-    <Content Include="Views\Home\ViewLog.cshtml" />
+    <Content Include="Views\Keap\About.cshtml" />
+    <Content Include="Views\Keap\Contact.cshtml" />
+    <Content Include="Views\Keap\Index.cshtml" />
+    <Content Include="Views\Keap\Events.cshtml" />
+    <Content Include="Views\Keap\CreateHook.cshtml" />
+    <Content Include="Views\Keap\ViewLog.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

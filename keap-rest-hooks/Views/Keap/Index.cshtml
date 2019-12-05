@@ -1,0 +1,20 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div>
+            @Html.ActionLink("Subscribe to Adding Invoice Payments", "createhook", "keap", new { eventKey = "invoice.payment.add" }, null)
+        </div>
+        <div>
+            @Html.ActionLink("Subscribe to Order Edits", "createhook", "keap", new { eventKey = "order.edit" }, null)
+        </div>
+        <div>
+            @Html.ActionLink("Subscribe to Order Deletes", "createhook", "keap", new { eventKey = "order.delete" }, null)
+        </div>
+        <div>
+            @Html.ActionLink("View Log", "viewlog", "keap")
+        </div>
+    </div>
+</div>

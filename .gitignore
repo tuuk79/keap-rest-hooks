@@ -1,2 +1,3 @@
-keap-rest-hooks/obj/Debug
-/keap-rest-hooks/bin
+keap-rest-hooks/obj
+keap-rest-hooks/bin/
+.vs/
