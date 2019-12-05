@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -24,6 +25,18 @@ namespace keap_rest_hooks.Controllers
 
         public ActionResult ViewLog()
         {
+            string logDirectory = ConfigurationManager.AppSettings["LogDirectory"];
+            ViewBag.Files = Directory.GetFiles(logDirectory);
+
+            if (Request.Form["ddlDailyLog"] == null)
+            {
+                return View();
+            }
+
+            var filePath = Request.Form["ddlDailyLog"];
+            string[] content = System.IO.File.ReadAllLines(filePath);
+            ViewBag.LogText = content;
+
             return View();
         }
 
@@ -186,7 +199,7 @@ namespace keap_rest_hooks.Controllers
 
                 if (eventSubscriptionPayload.event_key == "order.edit")
                 {
-                    var orderId = eventSubscriptionPayload.object_keys[0].id;
+                    var orderId = eventSubscriptionPayload.object_keys.ToList().FirstOrDefault().id;
 
                     // look up order using order id
                     var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
@@ -210,7 +223,7 @@ namespace keap_rest_hooks.Controllers
 
                 }
 
-                string path = @"c:\log";
+                string path = ConfigurationManager.AppSettings["LogPath"];
 
                 if (!Directory.Exists(path))
                 {

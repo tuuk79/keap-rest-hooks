@@ -1,1 +1,16 @@
-﻿View Logs
+﻿@using (Html.BeginForm())
+{
+    @Html.DropDownList("ddlDailyLog",
+                    new SelectList(ViewBag.Files),
+                    "Select Daily Log File")
+
+    <input type="submit" value="View Log File" onclick="location.href='@Url.Action("ViewLogPost", "Keap")'" />
+}
+
+@if (ViewBag.LogText != null)
+{
+    for (var i = 0; i < @ViewBag.LogText.Length; i++)
+    {
+        <div>@ViewBag.LogText[i]</div>
+    }
+}
