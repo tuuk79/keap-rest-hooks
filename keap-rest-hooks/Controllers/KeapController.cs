@@ -15,7 +15,7 @@ using System.Web.Mvc;
 
 namespace keap_rest_hooks.Controllers
 {
-    public class HomeController : Controller
+    public class KeapController : Controller
     {
 
         public ActionResult Index()
@@ -23,15 +23,15 @@ namespace keap_rest_hooks.Controllers
             return View();
         }
 
+        public ActionResult ViewLog()
+        {
+            return View();
+        }
+
         public ActionResult Authorize()
         {
-            var clientId = ConfigurationManager.AppSettings["ClientId"];
-            var redirectUri = ConfigurationManager.AppSettings["RedirectUri"];
-            var baseAuthorizeUrl = ConfigurationManager.AppSettings["BaseAuthorizeUrl"];
-            var responseType = ConfigurationManager.AppSettings["ResponseType"];
-            var state = ConfigurationManager.AppSettings["State"];
-
-            var authorizeUrl = $"{baseAuthorizeUrl}?client_id={clientId}&redirect_uri={redirectUri}&response_type={responseType}&state={state}";
+            var urlManager = new UrlManager();
+            var authorizeUrl = urlManager.getAuthorizationUrl();
 
             return Redirect($"{authorizeUrl}");
         }
@@ -62,56 +62,17 @@ namespace keap_rest_hooks.Controllers
             {
                 var json = await response.Content.ReadAsStringAsync();
                 var authenticationResponse = JsonConvert.DeserializeObject<AuthenticationResponse>(json);
-                ReferringAction referringAction = null;
 
                 var accessTokenManager = new AccessTokenManager();
                 accessTokenManager.saveAccessToken(authenticationResponse.access_token);
 
-                using (var db = new NinjacatorsEntities())
-                {
-                    referringAction = db.ReferringActions.Where(x => x.client_id == clientId).OrderByDescending(x => x.id).FirstOrDefault();
-                }
+                var referringActionManager = new ReferringActionManager();
+                var referringAction = referringActionManager.getReferringAction();
 
-                return await Task.Run(() => Redirect(referringAction.referring_action));
+                return await Task.Run(() => Redirect(referringAction));
             }
 
             return await Task.Run(() => Redirect("index"));
-        }
-
-        public async Task<ActionResult> Events()
-        {
-            var accessTokenManager = new AccessTokenManager();
-            string accessToken = accessTokenManager.getAccessToken();
-
-            if (accessToken == null)
-            {
-                using (var db = new NinjacatorsEntities())
-                {
-                    db.ReferringActions.Add(new ReferringAction()
-                    {
-                        client_id = ConfigurationManager.AppSettings["ClientId"],
-                        referring_action = "events"
-                    });
-                    db.SaveChanges();
-                }
-                return await Task.Run(() => RedirectToAction("Authorize"));
-            }
-
-            var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
-            var url = $"{baseApiUrl}/hooks/event_keys?access_token={accessToken}";
-
-            var client = new HttpClient();
-            var response = await client.GetAsync(url);
-
-            IEnumerable<string> events = null;
-
-            if (response.IsSuccessStatusCode)
-            {
-                var results = await response.Content.ReadAsStringAsync();
-                events = JsonConvert.DeserializeObject<IEnumerable<string>>(results);
-            }
-
-            return await Task.Run(() => View(events));
         }
 
         public async Task<ActionResult> CreateHook(string eventKey)
@@ -127,10 +88,8 @@ namespace keap_rest_hooks.Controllers
 
                 var createHookUrl = $"{baseApiUrl}/hooks?access_token={accessToken}";
 
-                using (var db = new NinjacatorsEntities())
-                {
-                    eventKey = db.EventKeys.Where(x => x.client_id == clientId).OrderByDescending(x => x.id).FirstOrDefault().event_key;
-                }
+                var eventKeyManager = new EventKeyManager();
+                eventKey = eventKeyManager.getEventKey();
 
                 var payload = new Dictionary<string, string>()
                 {
@@ -158,22 +117,11 @@ namespace keap_rest_hooks.Controllers
             }
             else
             {
-                using (var db = new NinjacatorsEntities())
-                {
-                    db.ReferringActions.Add(new ReferringAction()
-                    {
-                        client_id = ConfigurationManager.AppSettings["ClientId"],
-                        referring_action = "createhook"
-                    });
+                var referringActionManager = new ReferringActionManager();
+                referringActionManager.saveReferringAction("createhook");
 
-                    db.EventKeys.Add(new EventKey()
-                    {
-                        client_id = ConfigurationManager.AppSettings["ClientId"],
-                        event_key = eventKey
-                    });
-
-                    db.SaveChanges();
-                }
+                var eventKeyManager = new EventKeyManager();
+                eventKeyManager.saveEventKey(eventKey);
 
                 return await Task.Run(() => RedirectToAction("Authorize"));
             }
@@ -181,17 +129,10 @@ namespace keap_rest_hooks.Controllers
 
         public async Task<ActionResult> VerifyHookDelayed()
         {
-            string accessToken = null;
             var clientId = ConfigurationManager.AppSettings["ClientId"];
 
-            using (var db = new NinjacatorsEntities())
-            {
-                var latestAccessTokenRecord = db.AccessTokens
-                                .Where(x => x.client_id == clientId)
-                                .OrderByDescending(x => x.id)
-                                .FirstOrDefault();
-                accessToken = latestAccessTokenRecord.access_token;
-            }
+            var accessTokenManager = new AccessTokenManager();
+            var accessToken = accessTokenManager.getAccessToken();
 
             var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
             var verifyHookDelayedUrl = $"{baseApiUrl}/hooks/{TempData["RestHookKey"].ToString()}/delayedVerify?access_token={accessToken}";
@@ -202,23 +143,20 @@ namespace keap_rest_hooks.Controllers
             };
 
             var httpContent = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+            var hookSecretManager = new HookSecretManager();
+            var hookSecret = hookSecretManager.getHookSecret();
 
-            using (var db = new NinjacatorsEntities())
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("accept", "application/json");
+            client.DefaultRequestHeaders.Add("x-hook-secret", hookSecret);
+
+            var content = new FormUrlEncodedContent(payload);
+            var response = await client.PostAsync(verifyHookDelayedUrl, httpContent);
+
+            if (response.IsSuccessStatusCode)
             {
-                var xHookSecret = db.HookSecrets.Where(x => x.client_id == clientId).OrderByDescending(x => x.id).FirstOrDefault();
-
-                var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("accept", "application/json");
-                client.DefaultRequestHeaders.Add("x-hook-secret", xHookSecret.x_hook_secret);
-
-                var content = new FormUrlEncodedContent(payload);
-                var response = await client.PostAsync(verifyHookDelayedUrl, httpContent);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var createHookResponse = JsonConvert.DeserializeObject<CreateHookResponse>(json);
-                }
+                var json = await response.Content.ReadAsStringAsync();
+                var createHookResponse = JsonConvert.DeserializeObject<CreateHookResponse>(json);
             }
 
             return await Task.Run(() => View("index"));
@@ -232,28 +170,16 @@ namespace keap_rest_hooks.Controllers
 
             if (xHookSecret == null)
             {
-                string accessToken = null;
-                using (var db = new NinjacatorsEntities())
-                {
-                    var clientId = ConfigurationManager.AppSettings["ClientId"];
-                    var latestAccessTokenRecord = db.AccessTokens
-                                    .Where(x => x.client_id == clientId)
-                                    .OrderByDescending(x => x.id)
-                                    .FirstOrDefault();
-                    accessToken = latestAccessTokenRecord.access_token;
-                }
+                var clientId = ConfigurationManager.AppSettings["ClientId"];
+
+                var accessTokenManager = new AccessTokenManager();
+                var accessToken = accessTokenManager.getAccessToken();
 
                 if (accessToken == null)
                 {
-                    using (var db = new NinjacatorsEntities())
-                    {
-                        db.ReferringActions.Add(new ReferringAction()
-                        {
-                            client_id = ConfigurationManager.AppSettings["ClientId"],
-                            referring_action = "verifyhook"
-                        });
-                        db.SaveChanges();
-                    }
+                    var referringActionManager = new ReferringActionManager();
+                    referringActionManager.saveReferringAction("verifyhook");
+
                     return await Task.Run(() => RedirectToAction("Authorize"));
                 }
 
@@ -270,8 +196,6 @@ namespace keap_rest_hooks.Controllers
 
                     var client = new HttpClient();
                     var response = await client.GetAsync(url);
-
-
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -312,21 +236,10 @@ namespace keap_rest_hooks.Controllers
             }
             else
             {
-                //var responseMessage = new HttpResponseMessage(HttpStatusCode.OK);
-                //responseMessage.Headers.Add(xHookSecretHeader, xHookSecret);
-
                 Response.AddHeader(xHookSecretHeader, xHookSecret);
 
-                // store hook secret
-                using (var db = new NinjacatorsEntities())
-                {
-                    db.HookSecrets.Add(new HookSecret()
-                    {
-                        client_id = ConfigurationManager.AppSettings["ClientId"],
-                        x_hook_secret = xHookSecret
-                    });
-                    db.SaveChanges();
-                }
+                var hookSecretManager = new HookSecretManager();
+                hookSecretManager.saveHookSecret(xHookSecret);
 
                 return new HttpStatusCodeResult(HttpStatusCode.OK);
             }

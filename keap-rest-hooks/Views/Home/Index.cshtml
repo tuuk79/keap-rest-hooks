@@ -5,9 +5,6 @@
 <div class="row">
     <div class="col-md-12">
         <div>
-            @Html.ActionLink("Show Event Types", "events", "home")
-        </div>
-        <div>
             @Html.ActionLink("Subscribe to Adding Invoice Payments", "createhook", "home", new { eventKey = "invoice.payment.add" }, null)
         </div>
         <div>
@@ -15,6 +12,9 @@
         </div>
         <div>
             @Html.ActionLink("Subscribe to Order Deletes", "createhook", "home", new { eventKey = "order.delete" }, null)
+        </div>
+        <div>
+            @Html.ActionLink("View Log", "viewlog", "home")
         </div>
     </div>
 </div>
