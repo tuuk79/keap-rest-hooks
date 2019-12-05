@@ -1,4 +1,4 @@
 keap-rest-hooks/obj
-keap-rest-hooks/bin/
-bin/
-.vs/
+keap-rest-hooks/bin
+.vs
+packages/
