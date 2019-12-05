@@ -4,9 +4,11 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="8559c18b177c49cfb38dfb8295942a5c" Name="Diagram1">
+      <Diagram DiagramId="639d4e8e50864806a97f24adce304ab7" Name="Diagram1">
         <EntityTypeShape EntityType="NinjacatorsModel.HookSecret" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="NinjacatorsModel.ReferringAction" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NinjacatorsModel.AccessToken" Width="1.5" PointX="0.75" PointY="3.75" />
+        <EntityTypeShape EntityType="NinjacatorsModel.EventKey" Width="1.5" PointX="3.375" PointY="3.75" />
+        <EntityTypeShape EntityType="NinjacatorsModel.ReferringAction" Width="1.5" PointX="3.375" PointY="0.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

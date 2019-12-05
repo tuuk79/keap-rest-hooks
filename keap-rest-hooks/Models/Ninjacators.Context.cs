@@ -26,6 +26,8 @@ namespace keap_rest_hooks.Models
         }
     
         public virtual DbSet<HookSecret> HookSecrets { get; set; }
+        public virtual DbSet<AccessToken> AccessTokens { get; set; }
+        public virtual DbSet<EventKey> EventKeys { get; set; }
         public virtual DbSet<ReferringAction> ReferringActions { get; set; }
     }
 }

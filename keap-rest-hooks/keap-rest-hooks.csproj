@@ -148,9 +148,18 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Managers\AccessTokenManager.cs" />
+    <Compile Include="Models\AccessToken.cs">
+      <DependentUpon>Ninjacators.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Contact.cs" />
     <Compile Include="Models\CreateHookResponse.cs" />
     <Compile Include="Models\AuthenticationResponse.cs" />
     <Compile Include="Models\AuthenticationPayload.cs" />
+    <Compile Include="Models\EventKey.cs">
+      <DependentUpon>Ninjacators.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EventSubscriptionPayload.cs" />
     <Compile Include="Models\HookSecret.cs">
       <DependentUpon>Ninjacators.tt</DependentUpon>
     </Compile>
@@ -169,6 +178,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Ninjacators.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Models\ObjectKey.cs" />
+    <Compile Include="Models\Order.cs" />
     <Compile Include="Models\ReferringAction.cs">
       <DependentUpon>Ninjacators.tt</DependentUpon>
     </Compile>

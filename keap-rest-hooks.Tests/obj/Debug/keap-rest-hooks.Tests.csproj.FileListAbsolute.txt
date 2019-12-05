@@ -32,3 +32,12 @@ C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\System.Web.Optimizat
 C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\obj\Debug\keap-rest-hooks.Tests.csproj.CopyComplete
 C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\obj\Debug\keap-rest-hooks.Tests.dll
 C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\obj\Debug\keap-rest-hooks.Tests.pdb
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\EntityFramework.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\System.Web.Http.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\WebGrease.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\System.Net.Http.Formatting.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\Antlr3.Runtime.dll
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\EntityFramework.xml
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\System.Web.Http.xml
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\System.Net.Http.Formatting.xml
+C:\Projects\keap-rest-hooks\keap-rest-hooks.Tests\bin\Debug\Antlr3.Runtime.pdb

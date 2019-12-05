@@ -1,13 +1,15 @@
-﻿using keap_rest_hooks.Models;
+﻿using keap_rest_hooks.Managers;
+using keap_rest_hooks.Models;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
 using System.Web.Mvc;
 
@@ -60,30 +62,32 @@ namespace keap_rest_hooks.Controllers
             {
                 var json = await response.Content.ReadAsStringAsync();
                 var authenticationResponse = JsonConvert.DeserializeObject<AuthenticationResponse>(json);
+                ReferringAction referringAction = null;
 
-                var tokenCookie = new HttpCookie("access_token", authenticationResponse.access_token);
-                Response.Cookies.Add(tokenCookie);
+                var accessTokenManager = new AccessTokenManager();
+                accessTokenManager.saveAccessToken(authenticationResponse.access_token);
+
+                using (var db = new NinjacatorsEntities())
+                {
+                    referringAction = db.ReferringActions.Where(x => x.client_id == clientId).OrderByDescending(x => x.id).FirstOrDefault();
+                }
+
+                return await Task.Run(() => Redirect(referringAction.referring_action));
             }
 
-            // get referring action
-            ReferringAction referringAction = null;
-            using (var db = new NinjacatorsEntities())
-            {
-                referringAction = db.ReferringActions.Where(x => x.client_id == clientId).OrderByDescending(x => x.id).FirstOrDefault();
-            }
-
-            return await Task.Run(() => Redirect(referringAction.referring_action));
+            return await Task.Run(() => Redirect("index"));
         }
 
         public async Task<ActionResult> Events()
         {
-            // authenticate if necessary
-            if (Request.Cookies["access_token"] == null)
+            var accessTokenManager = new AccessTokenManager();
+            string accessToken = accessTokenManager.getAccessToken();
+
+            if (accessToken == null)
             {
                 using (var db = new NinjacatorsEntities())
                 {
-                    var referringActions = db.Set<ReferringAction>();
-                    referringActions.Add(new ReferringAction()
+                    db.ReferringActions.Add(new ReferringAction()
                     {
                         client_id = ConfigurationManager.AppSettings["ClientId"],
                         referring_action = "events"
@@ -94,7 +98,7 @@ namespace keap_rest_hooks.Controllers
             }
 
             var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
-            var url = $"{baseApiUrl}/hooks/event_keys?access_token={Request.Cookies["access_token"].Value}";
+            var url = $"{baseApiUrl}/hooks/event_keys?access_token={accessToken}";
 
             var client = new HttpClient();
             var response = await client.GetAsync(url);
@@ -112,47 +116,84 @@ namespace keap_rest_hooks.Controllers
 
         public async Task<ActionResult> CreateHook(string eventKey)
         {
-            // authenticate if necessary
-            if (Request.Cookies["access_token"] == null)
+            if (eventKey == null)
             {
-                // authenticate
+                var manager = new AccessTokenManager();
+                var accessToken = manager.getAccessToken();
 
+                var clientId = ConfigurationManager.AppSettings["ClientId"];
+                var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
+                var hookUrl = ConfigurationManager.AppSettings["HookUrl"];
+
+                var createHookUrl = $"{baseApiUrl}/hooks?access_token={accessToken}";
+
+                using (var db = new NinjacatorsEntities())
+                {
+                    eventKey = db.EventKeys.Where(x => x.client_id == clientId).OrderByDescending(x => x.id).FirstOrDefault().event_key;
+                }
+
+                var payload = new Dictionary<string, string>()
+                {
+                    { "eventKey", eventKey },
+                    { "hookUrl", hookUrl }
+                };
+
+                var httpContent = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+
+                var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("accept", "application/json");
+
+                var content = new FormUrlEncodedContent(payload);
+                var response = await client.PostAsync(createHookUrl, httpContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var createHookResponse = JsonConvert.DeserializeObject<CreateHookResponse>(json);
+
+                    TempData["RestHookKey"] = createHookResponse.key;
+                }
+
+                return await Task.Run(() => RedirectToAction("VerifyHookDelayed"));
             }
-
-            var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
-            var hookUrl = ConfigurationManager.AppSettings["HookUrl"];
-
-            var createHookUrl = $"{baseApiUrl}/hooks?access_token={Request.Cookies["access_token"].Value}";
-
-            var payload = new Dictionary<string, string>()
+            else
             {
-                { "eventKey", eventKey },
-                { "hookUrl", hookUrl }
-            };
+                using (var db = new NinjacatorsEntities())
+                {
+                    db.ReferringActions.Add(new ReferringAction()
+                    {
+                        client_id = ConfigurationManager.AppSettings["ClientId"],
+                        referring_action = "createhook"
+                    });
 
-            var httpContent = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+                    db.EventKeys.Add(new EventKey()
+                    {
+                        client_id = ConfigurationManager.AppSettings["ClientId"],
+                        event_key = eventKey
+                    });
 
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("accept", "application/json");
+                    db.SaveChanges();
+                }
 
-            var content = new FormUrlEncodedContent(payload);
-            var response = await client.PostAsync(createHookUrl, httpContent);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var createHookResponse = JsonConvert.DeserializeObject<CreateHookResponse>(json);
-
-                TempData["RestHookKey"] = createHookResponse.key;
+                return await Task.Run(() => RedirectToAction("Authorize"));
             }
-
-            return await Task.Run(() => Redirect("index"));
         }
 
         public async Task<ActionResult> VerifyHookDelayed()
         {
+            string accessToken = null;
+            var clientId = ConfigurationManager.AppSettings["ClientId"];
+
+            using (var db = new NinjacatorsEntities())
+            {
+                var latestAccessTokenRecord = db.AccessTokens
+                                .Where(x => x.client_id == clientId)
+                                .OrderByDescending(x => x.id)
+                                .FirstOrDefault();
+                accessToken = latestAccessTokenRecord.access_token;
+            }
+
             var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
-            var accessToken = Request.Cookies["access_token"].Value;
             var verifyHookDelayedUrl = $"{baseApiUrl}/hooks/{TempData["RestHookKey"].ToString()}/delayedVerify?access_token={accessToken}";
 
             var payload = new Dictionary<string, string>()
@@ -161,7 +202,6 @@ namespace keap_rest_hooks.Controllers
             };
 
             var httpContent = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
-            var clientId = ConfigurationManager.AppSettings["ClientId"];
 
             using (var db = new NinjacatorsEntities())
             {
@@ -185,45 +225,115 @@ namespace keap_rest_hooks.Controllers
         }
 
         [System.Web.Mvc.HttpPost]
-        public HttpResponseMessage VerifyHook([FromBody] string content)
+        public async Task<ActionResult> VerifyHook([FromBody] EventSubscriptionPayload eventSubscriptionPayload)
         {
-            // header and body json
-            // if hook secret, then return hook secret for verification using delayed
-            // if body json has object keys, then save whole body to file on server
             var xHookSecretHeader = ConfigurationManager.AppSettings["XHookSecretHeader"];
-
             var xHookSecret = Request.Headers[xHookSecretHeader];
 
             if (xHookSecret == null)
             {
-                // event triggered
-                // need to capture body
-                var responseMessage = new HttpResponseMessage(HttpStatusCode.OK);
+                string accessToken = null;
+                using (var db = new NinjacatorsEntities())
+                {
+                    var clientId = ConfigurationManager.AppSettings["ClientId"];
+                    var latestAccessTokenRecord = db.AccessTokens
+                                    .Where(x => x.client_id == clientId)
+                                    .OrderByDescending(x => x.id)
+                                    .FirstOrDefault();
+                    accessToken = latestAccessTokenRecord.access_token;
+                }
 
-                return responseMessage;
+                if (accessToken == null)
+                {
+                    using (var db = new NinjacatorsEntities())
+                    {
+                        db.ReferringActions.Add(new ReferringAction()
+                        {
+                            client_id = ConfigurationManager.AppSettings["ClientId"],
+                            referring_action = "verifyhook"
+                        });
+                        db.SaveChanges();
+                    }
+                    return await Task.Run(() => RedirectToAction("Authorize"));
+                }
+
+                Order order = null;
+
+                // handle order.edit
+                if (eventSubscriptionPayload.event_key == "order.edit")
+                {
+                    var orderId = eventSubscriptionPayload.object_keys[0].id;
+
+                    // look up order using order id
+                    var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
+                    var url = $"{baseApiUrl}/orders/{orderId}?access_token={accessToken}";
+
+                    var client = new HttpClient();
+                    var response = await client.GetAsync(url);
+
+
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var results = await response.Content.ReadAsStringAsync();
+                        order = JsonConvert.DeserializeObject<Order>(results);
+                    }
+                }
+
+                string path = @"c:\log";
+
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                path = Path.Combine(path, $"dailylog_{DateTime.Now.ToString("yyyyMMdd")}.csv");
+
+                if (System.IO.File.Exists(path))
+                {
+                    using (StreamWriter sw = System.IO.File.AppendText(path))
+                    {
+                        sw.WriteLine(order.contact.email);
+                        sw.WriteLine();
+                    }
+                }
+                else
+                {
+                    using (StreamWriter sw = System.IO.File.CreateText(path))
+                    {
+                        sw.WriteLine("Hello");
+                        sw.WriteLine("And");
+                        sw.WriteLine("Welcome");
+                        sw.WriteLine();
+                    }
+                }
+
+                return await Task.Run(() => View("index"));
             }
             else
             {
-                // regular verification of hook right during creation
-                var responseMessage = new HttpResponseMessage(HttpStatusCode.OK);
-                responseMessage.Headers.Add(xHookSecretHeader, xHookSecret);
+                //var responseMessage = new HttpResponseMessage(HttpStatusCode.OK);
+                //responseMessage.Headers.Add(xHookSecretHeader, xHookSecret);
+
+                Response.AddHeader(xHookSecretHeader, xHookSecret);
 
                 // store hook secret
-                using (var context = new NinjacatorsEntities())
+                using (var db = new NinjacatorsEntities())
                 {
-                    var hookSecrets = context.Set<HookSecret>();
-                    hookSecrets.Add(new HookSecret()
+                    db.HookSecrets.Add(new HookSecret()
                     {
                         client_id = ConfigurationManager.AppSettings["ClientId"],
                         x_hook_secret = xHookSecret
                     });
-                    context.SaveChanges();
+                    db.SaveChanges();
                 }
 
-                return responseMessage;
+                return new HttpStatusCodeResult(HttpStatusCode.OK);
             }
 
-            
+
         }
+
+
     }
 }

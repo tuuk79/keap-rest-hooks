@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using keap_rest_hooks.Managers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace keap_rest_hooks.Tests

@@ -8,9 +8,6 @@
             @Html.ActionLink("Show Event Types", "events", "home")
         </div>
         <div>
-            @Html.ActionLink("Create A Rest Hook", "createhook", "home")
-        </div>
-        <div>
             @Html.ActionLink("Subscribe to Adding Invoice Payments", "createhook", "home", new { eventKey = "invoice.payment.add" }, null)
         </div>
         <div>
@@ -18,9 +15,6 @@
         </div>
         <div>
             @Html.ActionLink("Subscribe to Order Deletes", "createhook", "home", new { eventKey = "order.delete" }, null)
-        </div>
-        <div>
-            @Html.ActionLink("Verify Hook", "verifyhookdelayed", "home")
         </div>
     </div>
 </div>
