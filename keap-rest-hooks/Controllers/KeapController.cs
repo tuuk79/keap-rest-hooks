@@ -1,6 +1,7 @@
 ﻿using keap_rest_hooks.Managers;
 using keap_rest_hooks.Models;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -214,28 +215,34 @@ namespace keap_rest_hooks.Controllers
                 }
                 else if (eventSubscriptionPayload.event_key == "order.delete")
                 {
+                    var sinceDate = DateTime.Now.AddMinutes(-2).ToString("yyyy-MM-ddTHH\\:mm\\:ss.000Z");
+
                     var orderId = eventSubscriptionPayload.object_keys.ToList().FirstOrDefault().id;
                     var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
-                    var url = $"{baseApiUrl}/orders/{orderId}?access_token={accessToken}";
+                    var url = $"{baseApiUrl}/transactions?since={sinceDate}&access_token={accessToken}";
+
+                    //2019-12-13T00:20:26.000Z
 
                     var client = new HttpClient();
                     var response = await client.GetAsync(url);
 
                     if (response.IsSuccessStatusCode)
                     {
+                        // filter by order id for sku info
+
                         var results = await response.Content.ReadAsStringAsync();
-                        var order = JsonConvert.DeserializeObject<Order>(results);
+                        var transactions = JsonConvert.DeserializeObject<SearchTransactionsResponse>(results);
 
                         var logFileManager = new LogFileManager();
-                        logFileManager.writeToLogFile(eventSubscriptionPayload.event_key, order);
+                        //logFileManager.writeToLogFile(eventSubscriptionPayload.event_key, order);
                     }
 
                 }
                 else if (eventSubscriptionPayload.event_key == "invoice.payment.add")
                 {
-                    var orderId = eventSubscriptionPayload.object_keys.ToList().FirstOrDefault().id;
+                    var transactionId = eventSubscriptionPayload.object_keys.ToList().FirstOrDefault().id;
                     var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
-                    var url = $"{baseApiUrl}/orders/{orderId}/payments?access_token={accessToken}";
+                    var url = $"{baseApiUrl}/transactions/{transactionId}?access_token={accessToken}";
 
                     var client = new HttpClient();
                     var response = await client.GetAsync(url);
@@ -243,10 +250,10 @@ namespace keap_rest_hooks.Controllers
                     if (response.IsSuccessStatusCode)
                     {
                         var results = await response.Content.ReadAsStringAsync();
-                        var order = JsonConvert.DeserializeObject<Order>(results);
+                        var transaction = JsonConvert.DeserializeObject<Transaction>(results);
 
                         var logFileManager = new LogFileManager();
-                        logFileManager.writeToLogFile(eventSubscriptionPayload.event_key, order);
+                        logFileManager.writeToLogFile(eventSubscriptionPayload.event_key, transaction.orders.FirstOrDefault());
                     }
                 }
 

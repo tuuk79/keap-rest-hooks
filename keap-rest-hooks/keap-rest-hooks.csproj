@@ -157,6 +157,7 @@
     <Compile Include="Models\AccessToken.cs">
       <DependentUpon>Ninjacators.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\SearchTransactionsResponse.cs" />
     <Compile Include="Models\Contact.cs" />
     <Compile Include="Models\CreateHookResponse.cs" />
     <Compile Include="Models\AuthenticationResponse.cs" />
@@ -184,6 +185,7 @@
       <DependentUpon>Ninjacators.edmx</DependentUpon>
     </Compile>
     <Compile Include="Models\ObjectKey.cs" />
+    <Compile Include="Models\Transaction.cs" />
     <Compile Include="Models\Product.cs" />
     <Compile Include="Models\OrderItem.cs" />
     <Compile Include="Models\Order.cs" />
