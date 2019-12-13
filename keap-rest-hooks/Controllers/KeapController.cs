@@ -1,7 +1,6 @@
 ﻿using keap_rest_hooks.Managers;
 using keap_rest_hooks.Models;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -34,7 +33,7 @@ namespace keap_rest_hooks.Controllers
             }
 
             var filePath = Request.Form["ddlDailyLog"];
-            string[] content = System.IO.File.ReadAllLines(filePath);
+            var content = System.IO.File.ReadAllLines(filePath);
             ViewBag.LogText = content;
 
             return View();
@@ -195,13 +194,9 @@ namespace keap_rest_hooks.Controllers
                     return await Task.Run(() => RedirectToAction("Authorize"));
                 }
 
-                Order order = null;
-
                 if (eventSubscriptionPayload.event_key == "order.edit")
                 {
                     var orderId = eventSubscriptionPayload.object_keys.ToList().FirstOrDefault().id;
-
-                    // look up order using order id
                     var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
                     var url = $"{baseApiUrl}/orders/{orderId}?access_token={accessToken}";
 
@@ -211,43 +206,47 @@ namespace keap_rest_hooks.Controllers
                     if (response.IsSuccessStatusCode)
                     {
                         var results = await response.Content.ReadAsStringAsync();
-                        order = JsonConvert.DeserializeObject<Order>(results);
+                        var order = JsonConvert.DeserializeObject<Order>(results);
+
+                        var logFileManager = new LogFileManager();
+                        logFileManager.writeToLogFile(eventSubscriptionPayload.event_key, order);
                     }
                 }
                 else if (eventSubscriptionPayload.event_key == "order.delete")
                 {
+                    var orderId = eventSubscriptionPayload.object_keys.ToList().FirstOrDefault().id;
+                    var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
+                    var url = $"{baseApiUrl}/orders/{orderId}?access_token={accessToken}";
+
+                    var client = new HttpClient();
+                    var response = await client.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var results = await response.Content.ReadAsStringAsync();
+                        var order = JsonConvert.DeserializeObject<Order>(results);
+
+                        var logFileManager = new LogFileManager();
+                        logFileManager.writeToLogFile(eventSubscriptionPayload.event_key, order);
+                    }
 
                 }
                 else if (eventSubscriptionPayload.event_key == "invoice.payment.add")
                 {
+                    var orderId = eventSubscriptionPayload.object_keys.ToList().FirstOrDefault().id;
+                    var baseApiUrl = ConfigurationManager.AppSettings["BaseApiUrl"];
+                    var url = $"{baseApiUrl}/orders/{orderId}/payments?access_token={accessToken}";
 
-                }
+                    var client = new HttpClient();
+                    var response = await client.GetAsync(url);
 
-                string path = ConfigurationManager.AppSettings["LogPath"];
-
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                path = Path.Combine(path, $"dailylog_{DateTime.Now.ToString("yyyyMMdd")}.csv");
-
-                if (System.IO.File.Exists(path))
-                {
-                    using (StreamWriter sw = System.IO.File.AppendText(path))
+                    if (response.IsSuccessStatusCode)
                     {
-                        sw.WriteLine(eventSubscriptionPayload.event_key);
-                        sw.WriteLine(order.contact.email);
-                        sw.WriteLine();
-                    }
-                }
-                else
-                {
-                    using (StreamWriter sw = System.IO.File.CreateText(path))
-                    {
-                        sw.WriteLine(eventSubscriptionPayload.event_key);
-                        sw.WriteLine(order.contact.email);
-                        sw.WriteLine();
+                        var results = await response.Content.ReadAsStringAsync();
+                        var order = JsonConvert.DeserializeObject<Order>(results);
+
+                        var logFileManager = new LogFileManager();
+                        logFileManager.writeToLogFile(eventSubscriptionPayload.event_key, order);
                     }
                 }
 

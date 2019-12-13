@@ -148,6 +148,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Managers\LogFileManager.cs" />
     <Compile Include="Managers\UrlManager.cs" />
     <Compile Include="Managers\EventKeyManager.cs" />
     <Compile Include="Managers\ReferringActionManager.cs" />
@@ -183,6 +184,8 @@
       <DependentUpon>Ninjacators.edmx</DependentUpon>
     </Compile>
     <Compile Include="Models\ObjectKey.cs" />
+    <Compile Include="Models\Product.cs" />
+    <Compile Include="Models\OrderItem.cs" />
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\ReferringAction.cs">
       <DependentUpon>Ninjacators.tt</DependentUpon>
@@ -217,6 +220,7 @@
     <Content Include="Models\Ninjacators.edmx.diagram">
       <DependentUpon>Ninjacators.edmx</DependentUpon>
     </Content>
+    <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
